@@ -16,7 +16,7 @@ import {
   Uint16BufferAttribute,
   Vector3,
 } from "three";
-import { degToRad } from "three/src/math/MathUtils.js";
+import { degToRad, radToDeg } from "three/src/math/MathUtils.js";
 import { pageAtom, pages } from "./UI";
 
 const easingFactor = 0.5; // Controls the speed of the easing
@@ -39,7 +39,7 @@ const pageGeometry = new BoxGeometry(
   2
 );
 
-pageGeometry.translate(PAGE_WIDTH / 2, 0, 0);
+pageGeometry.translate(PAGE_WIDTH / 2, 0, 0); //x 轴平移一半
 
 const position = pageGeometry.attributes.position;
 const vertex = new Vector3();
@@ -53,9 +53,10 @@ for (let i = 0; i < position.count; i++) {
 
   const skinIndex = Math.max(0, Math.floor(x / SEGMENT_WIDTH)); // calculate the skin index
   let skinWeight = (x % SEGMENT_WIDTH) / SEGMENT_WIDTH; // calculate the skin weight
-
+  console.log("@@@", skinIndex, skinWeight);
   skinIndexes.push(skinIndex, skinIndex + 1, 0, 0); // set the skin indexes
   skinWeights.push(1 - skinWeight, skinWeight, 0, 0); // set the skin weights
+  // console.log(i, vertex, position, x, skinIndex, skinWeight, position);
 }
 
 pageGeometry.setAttribute(
@@ -121,7 +122,7 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
       }
     }
     const skeleton = new Skeleton(bones);
-
+    // 设置立方体六个面的材质
     const materials = [
       ...pageMaterials,
       new MeshStandardMaterial({
@@ -140,14 +141,7 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
       new MeshStandardMaterial({
         color: whiteColor,
         map: picture2,
-        ...(number === pages.length - 1
-          ? {
-              roughnessMap: pictureRoughness,
-            }
-          : {
-              roughness: 0.1,
-            }),
-        emissive: emissiveColor,
+        emissive: emissiveColor, //自发光颜色
         emissiveIntensity: 0,
       }),
     ];
@@ -161,13 +155,14 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
   }, []);
 
   // useHelper(skinnedMeshRef, SkeletonHelper, "red");
-
+  let flag = 1;
+  // delta 是时钟
   useFrame((_, delta) => {
     if (!skinnedMeshRef.current) {
       return;
     }
-
     const emissiveIntensity = highlighted ? 0.22 : 0;
+    // 鼠标移入后设置前后两面的自发光线性变强
     skinnedMeshRef.current.material[4].emissiveIntensity =
       skinnedMeshRef.current.material[5].emissiveIntensity = MathUtils.lerp(
         skinnedMeshRef.current.material[4].emissiveIntensity,
@@ -188,18 +183,22 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
     }
 
     const bones = skinnedMeshRef.current.skeleton.bones;
+    if (flag) {
+      flag = 0;
+      // console.log("bones", number, bones);
+    }
     for (let i = 0; i < bones.length; i++) {
       const target = i === 0 ? group.current : bones[i];
 
       const insideCurveIntensity = i < 8 ? Math.sin(i * 0.2 + 0.25) : 0;
       const outsideCurveIntensity = i >= 8 ? Math.cos(i * 0.3 + 0.09) : 0;
-      const turningIntensity =
-        Math.sin(i * Math.PI * (1 / bones.length)) * turningTime;
       let rotationAngle =
         insideCurveStrength * insideCurveIntensity * targetRotation -
-        outsideCurveStrength * outsideCurveIntensity * targetRotation +
-        turningCurveStrength * turningIntensity * targetRotation;
+        outsideCurveStrength * outsideCurveIntensity * targetRotation;
       let foldRotationAngle = degToRad(Math.sign(targetRotation) * 2);
+      if (turningTime === 0) {
+        foldRotationAngle = 0;
+      }
       if (bookClosed) {
         if (i === 0) {
           rotationAngle = targetRotation;
@@ -217,23 +216,31 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
         delta
       );
 
-      const foldIntensity =
-        i > 8
-          ? Math.sin(i * Math.PI * (1 / bones.length) - 0.5) * turningTime
-          : 0;
-      easing.dampAngle(
-        target.rotation,
-        "x",
-        foldRotationAngle * foldIntensity,
-        easingFactorFold,
-        delta
-      );
+      // const foldIntensity =
+      //   i > 8
+      //     ? Math.sin(i * Math.PI * (1 / bones.length) - 0.5) * turningTime
+      //     : 0;
+      // number === 1 &&
+      //   i === 31 &&
+      //   console.log(
+      //     "foldIntensity",
+      //     number,
+      //     i,
+      //     foldRotationAngle,
+      //     foldIntensity
+      //   );
+      // easing.dampAngle(
+      //   target.rotation,
+      //   "x",
+      //   foldRotationAngle * foldIntensity,
+      //   easingFactorFold,
+      //   delta
+      // );
     }
   });
 
   const [_, setPage] = useAtom(pageAtom);
   const [highlighted, setHighlighted] = useState(false);
-  useCursor(highlighted);
 
   return (
     <group
@@ -269,6 +276,7 @@ export const Book = ({ ...props }) => {
   useEffect(() => {
     let timeout;
     const goToPage = () => {
+      //page是目标页 delayedPage是当前页
       setDelayedPage((delayedPage) => {
         if (page === delayedPage) {
           return delayedPage;
