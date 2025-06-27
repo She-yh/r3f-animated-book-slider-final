@@ -1,4 +1,4 @@
-import { useCursor, useTexture } from "@react-three/drei";
+import { useCursor, useTexture, useHelper } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useAtom } from "jotai";
 import { easing } from "maath";
@@ -15,6 +15,7 @@ import {
   SRGBColorSpace,
   Uint16BufferAttribute,
   Vector3,
+  SkeletonHelper,
 } from "three";
 import { degToRad, radToDeg } from "three/src/math/MathUtils.js";
 import { pageAtom, pages } from "./UI";
@@ -218,7 +219,7 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
       );
     }
   });
-
+  useHelper(skinnedMeshRef, SkeletonHelper, "red");
   const [_, setPage] = useAtom(pageAtom);
   const [highlighted, setHighlighted] = useState(false);
 
