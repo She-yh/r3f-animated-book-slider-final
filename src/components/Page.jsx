@@ -86,10 +86,19 @@ const pageMaterials = [
   }),
 ];
 
-const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
+const Page = ({
+  number,
+  front,
+  back,
+  page,
+  opened,
+  bookClosed,
+  rotationInit,
+  ...props
+}) => {
   const [picture, picture2, pictureRoughness] = useTexture([
-    `/textures/${front}.jpg`,
-    `/textures/${back}.jpg`,
+    `/lyrics_book/textures/${front}.jpg`,
+    `/lyrics_book/textures/${back}.jpg`,
   ]);
   picture.colorSpace = picture2.colorSpace = SRGBColorSpace;
   const group = useRef();
@@ -155,40 +164,6 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
         emissiveIntensity,
         0.1
       );
-
-    if (lastOpened.current !== opened) {
-      turnedAt.current = +new Date();
-      lastOpened.current = opened;
-    }
-    let turningTime = Math.min(400, new Date() - turnedAt.current) / 400;
-    turningTime = Math.sin(turningTime * Math.PI);
-
-    let targetRotation = opened ? -Math.PI / 2 : Math.PI / 2;
-
-    targetRotation += degToRad(number * 2);
-
-    const bones = skinnedMeshRef.current.skeleton.bones;
-    if (flag) {
-      flag = 0;
-    }
-    for (let i = 0; i < bones.length; i++) {
-      const target = i === 0 ? group.current : bones[i];
-
-      const insideCurveIntensity =
-        i < 8 ? insideCurveStrength * Math.sin(i * 0.2 + 0.25) : 0;
-      const outsideCurveIntensity =
-        i >= 8 ? outsideCurveStrength * Math.cos(i * 0.3 + 0.09) : 0;
-      let rotationAngle =
-        insideCurveIntensity * targetRotation -
-        outsideCurveIntensity * targetRotation;
-      easing.dampAngle(
-        target.rotation,
-        "y",
-        rotationAngle,
-        easingFactor,
-        delta
-      );
-    }
   });
   useHelper(skinnedMeshRef, SkeletonHelper, "red");
   const [_, setPage] = useAtom(pageAtom);
@@ -211,11 +186,12 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
         setPage(opened ? number : number + 1);
         setHighlighted(false);
       }}
+      rotation-y={degToRad(rotationInit)}
     >
       <primitive
         object={manualSkinnedMesh}
         ref={skinnedMeshRef}
-        position-z={-number * PAGE_DEPTH + page * PAGE_DEPTH}
+        // position-z={-number * PAGE_DEPTH + page * PAGE_DEPTH}
       />
     </group>
   );
