@@ -164,9 +164,8 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
     turningTime = Math.sin(turningTime * Math.PI);
 
     let targetRotation = opened ? -Math.PI / 2 : Math.PI / 2;
-    if (!bookClosed) {
-      targetRotation += degToRad(number * 2);
-    }
+
+    targetRotation += degToRad(number * 2);
 
     const bones = skinnedMeshRef.current.skeleton.bones;
     if (flag) {
@@ -182,19 +181,6 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
       let rotationAngle =
         insideCurveIntensity * targetRotation -
         outsideCurveIntensity * targetRotation;
-      let foldRotationAngle = degToRad(Math.sign(targetRotation) * 2);
-      if (turningTime === 0) {
-        foldRotationAngle = 0;
-      }
-      if (bookClosed) {
-        if (i === 0) {
-          rotationAngle = targetRotation;
-          foldRotationAngle = 0;
-        } else {
-          rotationAngle = 0;
-          foldRotationAngle = 0;
-        }
-      }
       easing.dampAngle(
         target.rotation,
         "y",

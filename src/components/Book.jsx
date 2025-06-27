@@ -23,10 +23,17 @@ export const Book = ({ ...props }) => {
           timeout = setTimeout(() => {
             goToPage();
           }, 150);
+          if (page <= 0 || page >= 4) return delayedPage;
+          const clickedPage = page % 4;
+          const oppositePage = (page + 2) % 4;
+          console.log("clickedpage", clickedPage, oppositePage);
           if (page > delayedPage) {
+            console.log("右边翻页", page, delayedPage);
             return delayedPage + 1;
           }
           if (page < delayedPage) {
+            console.log("左边翻页", page, delayedPage);
+
             return delayedPage - 1;
           }
         }
@@ -46,7 +53,6 @@ export const Book = ({ ...props }) => {
           page={delayedPage}
           number={index}
           opened={delayedPage > index}
-          bookClosed={delayedPage === 0 || delayedPage === pages.length}
           {...pageData}
         />
       ))}

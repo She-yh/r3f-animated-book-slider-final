@@ -12,7 +12,7 @@ const pictures = [
   "DSC01071",
 ];
 
-export const pageAtom = atom(0);
+export const pageAtom = atom(1);
 export const pages = [];
 for (let i = 0; i < pictures.length; i += 2) {
   pages.push({
