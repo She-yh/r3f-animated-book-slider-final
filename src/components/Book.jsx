@@ -185,16 +185,17 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
     const bones = skinnedMeshRef.current.skeleton.bones;
     if (flag) {
       flag = 0;
-      // console.log("bones", number, bones);
     }
     for (let i = 0; i < bones.length; i++) {
       const target = i === 0 ? group.current : bones[i];
 
-      const insideCurveIntensity = i < 8 ? Math.sin(i * 0.2 + 0.25) : 0;
-      const outsideCurveIntensity = i >= 8 ? Math.cos(i * 0.3 + 0.09) : 0;
+      const insideCurveIntensity =
+        i < 8 ? insideCurveStrength * Math.sin(i * 0.2 + 0.25) : 0;
+      const outsideCurveIntensity =
+        i >= 8 ? outsideCurveStrength * Math.cos(i * 0.3 + 0.09) : 0;
       let rotationAngle =
-        insideCurveStrength * insideCurveIntensity * targetRotation -
-        outsideCurveStrength * outsideCurveIntensity * targetRotation;
+        insideCurveIntensity * targetRotation -
+        outsideCurveIntensity * targetRotation;
       let foldRotationAngle = degToRad(Math.sign(targetRotation) * 2);
       if (turningTime === 0) {
         foldRotationAngle = 0;
@@ -215,27 +216,6 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
         easingFactor,
         delta
       );
-
-      // const foldIntensity =
-      //   i > 8
-      //     ? Math.sin(i * Math.PI * (1 / bones.length) - 0.5) * turningTime
-      //     : 0;
-      // number === 1 &&
-      //   i === 31 &&
-      //   console.log(
-      //     "foldIntensity",
-      //     number,
-      //     i,
-      //     foldRotationAngle,
-      //     foldIntensity
-      //   );
-      // easing.dampAngle(
-      //   target.rotation,
-      //   "x",
-      //   foldRotationAngle * foldIntensity,
-      //   easingFactorFold,
-      //   delta
-      // );
     }
   });
 
