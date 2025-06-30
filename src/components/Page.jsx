@@ -12,19 +12,11 @@ import {
   Vector3,
   SkeletonHelper,
 } from "three";
-import { degToRad, radToDeg } from "three/src/math/MathUtils.js";
-import { useCursor, useTexture, useHelper } from "@react-three/drei";
+import { degToRad } from "three/src/math/MathUtils.js";
+import { useTexture, useHelper } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { easing } from "maath";
-import { pageAtom, pages } from "./UI";
-import { useAtom } from "jotai";
-import { useEffect, useMemo, useRef, useState } from "react";
-const easingFactor = 0.5; // Controls the speed of the easing
-const easingFactorFold = 0.3; // Controls the speed of the easing
-const insideCurveStrength = 0.18; // Controls the strength of the curve
-const outsideCurveStrength = 0.05; // Controls the strength of the curve
-const turningCurveStrength = 0.09; // Controls the strength of the curve
-
+import usePreviewStore from "./PreviewStore.tsx";
+import { useMemo, useRef, useState } from "react";
 const PAGE_WIDTH = 1.28;
 const PAGE_HEIGHT = 1.71; // 4:3 aspect ratio
 const PAGE_DEPTH = 0.003;
@@ -166,7 +158,7 @@ const Page = ({
       );
   });
   useHelper(skinnedMeshRef, SkeletonHelper, "red");
-  const [_, setPage] = useAtom(pageAtom);
+  const { setPage } = usePreviewStore();
   const [highlighted, setHighlighted] = useState(false);
 
   return (

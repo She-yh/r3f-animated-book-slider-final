@@ -1,74 +1,91 @@
-import { useAtom } from "jotai";
+import usePreviewStore from "./PreviewStore.tsx";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTexture } from "@react-three/drei";
-import { pageAtom, pages, countAtom, directionAtom } from "./UI";
+import { pages } from "./UI";
 import Page from "./Page";
-import { setupAnimation } from "./utils";
+import TWEEN from "@tweenjs/tween.js";
+import { degToRad, passPages } from "./utils.jsx";
 pages.forEach((page) => {
   useTexture.preload(`/lyrics_book/textures/${page.front}.jpg`);
   useTexture.preload(`/lyrics_book/textures/${page.back}.jpg`);
   useTexture.preload(`/lyrics_book/textures/book-cover-roughness.jpg`);
 });
-const ANGLE_DEFAULT = 15;
+const ANGLE_DEFAULT = 0.5;
 const rotationInit = [0, ANGLE_DEFAULT, 180 - ANGLE_DEFAULT, 180];
 export const Book = ({ ...props }) => {
-  const [page] = useAtom(pageAtom);
-  const [delayedPage, setDelayedPage] = useState(page);
-  const [count, setCount] = useAtom(countAtom);
-  const [direction] = useAtom(directionAtom);
+  const { page, count, direction, setIsRotating } = usePreviewStore();
+  const [delayedPage] = useState(page);
   const pagesRef = useRef();
+  const setupAnimation = (pages, direction, changeTexures) => {
+    let targetY;
+    let selectedPage;
+    // 最底下那一页是不用转的
+    console.log(
+      pages.current.children[3].rotation.y,
+      pages.current.children[2].rotation.y,
+      pages.current.children[1].rotation.y,
+      pages.current.children[0].rotation.y
+    );
+    if (direction === 1) {
+      // page[2]往左翻
+      pages.current.children[3].rotation.y =
+        pages.current.children[2].rotation.y;
+      // selectedBones = bones[2];
+      selectedPage = pages.current.children[2];
+      targetY = pages.current.children[1].rotation.y;
+      pages.current.children[1].rotation.y =
+        pages.current.children[0].rotation.y;
+      pages.current.children[0].rotation.y = degToRad(180);
+    } else {
+      // page[1]往右翻
+      pages.current.children[0].rotation.y =
+        pages.current.children[1].rotation.y;
+      // selectedBones = bones[1];
+      selectedPage = pages.current.children[1];
+      targetY = pages.current.children[2].rotation.y;
+      pages.current.children[2].rotation.y =
+        pages.current.children[3].rotation.y;
+      pages.current.children[3].rotation.y = degToRad(0);
+    }
+    const bones = selectedPage.children[0].skeleton.bones;
+    console.log(selectedPage, targetY, bones);
+    new TWEEN.Tween(selectedPage.rotation)
+      .to({ y: targetY }, 1500)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .onComplete(() => {
+        passPages(pages, direction);
+        changeTexures(pages);
+        console.log("onComplete");
+        setIsRotating(false);
+      })
+      .onUpdate(({ y }) => {
+        selectedPage.rotation.y = y;
+        console.log("onUpdate", y);
+      })
+      .start();
+    for (let i = 1; i < bones.length; i++) {
+      new TWEEN.Tween(bones[i].rotation)
+        .to({ y: direction * degToRad(5) }, 700 - i * 10)
+        .easing(TWEEN.Easing.Quintic.Out)
+        .repeat(1)
+        .yoyo(true)
+        .start();
+    }
+  };
   useEffect(() => {
-    const currentPage = count % 4;
-    const oppositePage = (count + 2) % 4;
-    console.log("count", currentPage, oppositePage);
-    const tweena = setupAnimation(pagesRef, direction, changeTexture);
+    console.log("direction", direction);
+    if (direction === 0) return;
+    setupAnimation(pagesRef, direction, changeTexture);
+    console.log("animate", TWEEN.getAll());
     function animate() {
       requestAnimationFrame(animate);
-      tweena.update();
+      TWEEN.update();
     }
     animate();
-  }, [count]);
+  }, [direction, count]);
   const changeTexture = (pages) => {
     console.log("changetexture", pages);
   };
-  // useEffect(() => {
-  //   let timeout;
-  //   const goToPage = () => {
-  //     console.log("goToPage", page, delayedPage);
-  //     //page是目标页 delayedPage是当前页
-  //     setDelayedPage((delayedPage) => {
-  //       //如果目标页和当前页一致则不翻页
-  //       if (page === delayedPage) {
-  //         return delayedPage;
-  //       } else {
-  //         timeout = setTimeout(() => {
-  //           goToPage();
-  //         }, 150);
-  //         if (page <= 0 || page >= 4) return delayedPage;
-  //         if (page > delayedPage) {
-  //           console.log("右边翻页", page, delayedPage);
-  //           const tweena = setupAnimation(pagesRef, 1, changeTexture);
-  //           function animate() {
-  //             requestAnimationFrame(animate);
-  //             tweena.update();
-  //           }
-  //           animate();
-  //           setCount(count + 1);
-  //           return delayedPage + 1;
-  //         }
-  //         if (page < delayedPage) {
-  //           console.log("左边翻页", page, delayedPage);
-  //           setCount(count - 1);
-  //           return delayedPage - 1;
-  //         }
-  //       }
-  //     });
-  //   };
-  //   goToPage();
-  //   return () => {
-  //     clearTimeout(timeout);
-  //   };
-  // }, [page]);
 
   return (
     <group {...props} rotation-y={-Math.PI / 2} ref={pagesRef}>
