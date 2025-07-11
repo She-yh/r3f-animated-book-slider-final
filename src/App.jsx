@@ -1,4 +1,4 @@
-import { Loader } from "@react-three/drei";
+// import { Loader } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Suspense } from "react";
 import { Experience } from "./components/Experience";
@@ -8,7 +8,7 @@ function App() {
   return (
     <>
       <UI />
-      <Loader />
+      {/* <Loader /> */}
       <Canvas
         shadows
         camera={{

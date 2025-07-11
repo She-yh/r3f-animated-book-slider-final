@@ -5,6 +5,7 @@ import { pages } from "./UI";
 import Page from "./Page";
 import TWEEN from "@tweenjs/tween.js";
 import { degToRad, passPages } from "./utils.jsx";
+
 pages.forEach((page) => {
   useTexture.preload(`/lyrics_book/textures/${page.front}.jpg`);
   useTexture.preload(`/lyrics_book/textures/${page.back}.jpg`);
